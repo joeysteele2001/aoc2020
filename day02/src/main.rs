@@ -3,17 +3,14 @@ use day02::PasswordDBEntry;
 const INPUT: &str = include_str!("../input.txt");
 
 fn main() {
-    part1()
+    part2()
 }
 
-fn part1() {
-    let entries = INPUT.lines()
-        .map(|l| l.parse::<PasswordDBEntry>().unwrap());
+fn part2() {
+    let entries = INPUT.lines().map(|l| l.parse::<PasswordDBEntry>().unwrap());
 
-    let num_valid = entries
-        .filter(|e| e.is_valid())
-        .count();
+    let num_valid = entries.filter(|e| e.is_valid()).count();
 
-    println!("*** PART 1 ***");
+    println!("*** PART 2 ***");
     println!("{}", num_valid);
 }

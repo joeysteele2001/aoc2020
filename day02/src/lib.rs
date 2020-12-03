@@ -1,10 +1,10 @@
-use std::ops;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct PasswordPolicy {
-    pub restricted_character: char,
-    pub times_allowed: ops::RangeInclusive<usize>,
+struct PasswordPolicy {
+    restricted_character: char,
+    lower_position: usize,
+    upper_position: usize,
 }
 
 impl PasswordPolicy {
@@ -13,28 +13,33 @@ impl PasswordPolicy {
         let mut parts = policy.split_whitespace();
 
         let times_allowed = parts.next()?;
-        let mut nums = times_allowed.split('-').map(|n| n.parse());
+        let mut nums = times_allowed.split('-').map(|n| n.parse::<usize>());
 
-        let min = nums.next()?.ok()?;
-        let max = nums.next()?.ok()?;
-
-        let times_allowed = min..=max;
+        let lower_position = nums.next()?.ok()? - 1; // index starting at zero!
+        let upper_position = nums.next()?.ok()? - 1;
 
         let restricted_character = parts.next()?.chars().next()?;
 
         Some(Self {
             restricted_character,
-            times_allowed,
+            lower_position,
+            upper_position,
         })
     }
 
     pub fn is_met_by(&self, password: &str) -> bool {
-        let num_restricted_char = password
-            .chars()
-            .filter(|&c| c == self.restricted_character)
-            .count();
+        let password = password.chars();
 
-        self.times_allowed.contains(&num_restricted_char)
+        let lower_and_upper_chars = password.clone().nth(self.lower_position).and_then(|c1| {
+            let c2 = password.clone().nth(self.upper_position)?;
+            Some((c1, c2))
+        });
+
+        if let Some((c1, c2)) = lower_and_upper_chars {
+            (c1 == self.restricted_character) ^ (c2 == self.restricted_character)
+        } else {
+            false
+        }
     }
 }
 
@@ -84,7 +89,8 @@ mod tests {
     fn test_is_met_by1() {
         let policy = PasswordPolicy {
             restricted_character: 'a',
-            times_allowed: 1..=3,
+            lower_position: 0,
+            upper_position: 2,
         };
 
         assert!(policy.is_met_by("abcde"))
@@ -94,7 +100,8 @@ mod tests {
     fn test_is_met_by2() {
         let policy = PasswordPolicy {
             restricted_character: 'b',
-            times_allowed: 1..=3,
+            lower_position: 0,
+            upper_position: 2,
         };
 
         assert!(!policy.is_met_by("cdefg"))
@@ -104,10 +111,11 @@ mod tests {
     fn test_is_met_by3() {
         let policy = PasswordPolicy {
             restricted_character: 'c',
-            times_allowed: 2..=9,
+            lower_position: 1,
+            upper_position: 8,
         };
 
-        assert!(policy.is_met_by("ccccccccc"))
+        assert!(!policy.is_met_by("ccccccccc"))
     }
 
     #[test]
@@ -118,7 +126,8 @@ mod tests {
             policy_str.parse::<PasswordPolicy>().unwrap(),
             PasswordPolicy {
                 restricted_character: 'a',
-                times_allowed: 1..=3,
+                lower_position: 0,
+                upper_position: 2,
             }
         )
     }
@@ -131,7 +140,8 @@ mod tests {
             policy_str.parse::<PasswordPolicy>().unwrap(),
             PasswordPolicy {
                 restricted_character: 'b',
-                times_allowed: 1..=3,
+                lower_position: 0,
+                upper_position: 2,
             }
         )
     }
@@ -144,7 +154,8 @@ mod tests {
             policy_str.parse::<PasswordPolicy>().unwrap(),
             PasswordPolicy {
                 restricted_character: 'c',
-                times_allowed: 2..=9,
+                lower_position: 1,
+                upper_position: 8,
             }
         )
     }
@@ -155,7 +166,8 @@ mod tests {
 
         let expected_policy = PasswordPolicy {
             restricted_character: 'a',
-            times_allowed: 1..=3,
+            lower_position: 0,
+            upper_position: 2,
         };
 
         assert_eq!(
@@ -173,7 +185,8 @@ mod tests {
 
         let expected_policy = PasswordPolicy {
             restricted_character: 'b',
-            times_allowed: 1..=3,
+            lower_position: 0,
+            upper_position: 2,
         };
 
         assert_eq!(
@@ -191,7 +204,8 @@ mod tests {
 
         let expected_policy = PasswordPolicy {
             restricted_character: 'c',
-            times_allowed: 2..=9,
+            lower_position: 1,
+            upper_position: 8,
         };
 
         assert_eq!(
@@ -223,6 +237,6 @@ mod tests {
             .parse::<PasswordDBEntry>()
             .unwrap();
 
-        assert!(entry.is_valid())
+        assert!(!entry.is_valid())
     }
 }
