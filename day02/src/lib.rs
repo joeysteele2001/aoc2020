@@ -49,7 +49,7 @@ impl FromStr for PasswordPolicy {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PasswordDBEntry {
     policy: PasswordPolicy,
-    password: String
+    password: String,
 }
 
 impl PasswordDBEntry {
@@ -60,10 +60,11 @@ impl PasswordDBEntry {
         let policy: PasswordPolicy = parts.next()?.parse().ok()?;
         let password = parts.next()?.trim().to_string();
 
-        Some(Self {
-            policy,
-            password,
-        })
+        Some(Self { policy, password })
+    }
+
+    pub fn is_valid(&self) -> bool {
+        self.policy.is_met_by(&self.password)
     }
 }
 
@@ -200,5 +201,28 @@ mod tests {
                 password: "ccccccccc".to_string(),
             }
         )
+    }
+
+    #[test]
+    fn test_valid1() {
+        let entry = "1-3 a: abcde".parse::<PasswordDBEntry>().unwrap();
+
+        assert!(entry.is_valid())
+    }
+
+    #[test]
+    fn test_valid2() {
+        let entry = "1-3 b: cdefg".parse::<PasswordDBEntry>().unwrap();
+
+        assert!(!entry.is_valid())
+    }
+
+    #[test]
+    fn test_valid3() {
+        let entry = "2-9 c: cccccccc\n1-3 a: abcde\n"
+            .parse::<PasswordDBEntry>()
+            .unwrap();
+
+        assert!(entry.is_valid())
     }
 }
