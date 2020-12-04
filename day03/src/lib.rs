@@ -80,10 +80,6 @@ impl FromStr for Map {
 struct Row(Vec<MapItem>);
 
 impl Row {
-    fn items(&self) -> impl Iterator<Item = &MapItem> {
-        self.0.iter()
-    }
-
     fn len(&self) -> usize {
         self.0.len()
     }
