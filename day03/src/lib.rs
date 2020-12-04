@@ -11,8 +11,7 @@ impl Map {
         for row in self.rows().step_by(dy).skip(1) {
             j += dx;
 
-            if row.get(j) {
-                // This is a tree
+            if let MapItem::Tree = row.get(j) {
                 count += 1;
             }
         }
@@ -45,20 +44,20 @@ impl Map {
     }
 
     #[must_use]
-    fn parse_row_from_str(s: &str, row: &mut Vec<bool>) -> Option<()> {
+    fn parse_row_from_str(s: &str, row: &mut Vec<MapItem>) -> Option<()> {
         let chars = s.lines().next()?.chars();
 
         for c in chars {
-            let is_tree = match c {
-                '.' => false,
-                '#' => true,
+            let map_item = match c {
+                '.' => MapItem::Empty,
+                '#' => MapItem::Tree,
                 _ => {
                     // Invalid character
                     return None;
                 }
             };
 
-            row.push(is_tree);
+            row.push(map_item);
         }
 
         Some(())
@@ -78,10 +77,10 @@ impl FromStr for Map {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-struct Row(Vec<bool>);
+struct Row(Vec<MapItem>);
 
 impl Row {
-    fn items(&self) -> impl Iterator<Item = &bool> {
+    fn items(&self) -> impl Iterator<Item = &MapItem> {
         self.0.iter()
     }
 
@@ -90,7 +89,13 @@ impl Row {
     }
 
     /// Get the element at `idx`, where the row repeats infinitely.
-    fn get(&self, idx: usize) -> bool {
+    fn get(&self, idx: usize) -> MapItem {
         self.0[idx % self.len()]
     }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum MapItem {
+    Empty,
+    Tree,
 }
