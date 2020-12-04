@@ -25,20 +25,7 @@ fn part1() {
 
     let map = parse_input(INPUT);
 
-    let cols = map[0].len();
-
-    let mut count = 0;
-    let mut j = 0;
-    let dj = 3;
-
-    for row in map.iter().skip(1) {
-        j += dj;
-
-        if row[j % cols] {
-            // We've hit a tree
-            count += 1;
-        }
-    }
+    let count = count_trees(&map, 3, 1);
 
     println!("{}", count);
 }
