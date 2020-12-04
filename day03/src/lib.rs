@@ -7,13 +7,11 @@ impl Map {
     pub fn count_trees(&self, dx: usize, dy: usize) -> usize {
         let mut count = 0;
         let mut j = 0;
-        let mut i = 0;
 
-        while i < self.n_rows() - 1 {
-            i += dy;
+        for row in self.rows().step_by(dy).skip(1) {
             j += dx;
 
-            if self.0[i][j % self.n_cols()] {
+            if row[j % self.n_cols()] {
                 // This is a tree
                 count += 1;
             }
@@ -64,6 +62,10 @@ impl Map {
         }
 
         Some(())
+    }
+
+    fn rows(&self) -> impl Iterator<Item = &Vec<bool>> + '_ {
+        self.0.iter()
     }
 
     fn n_rows(&self) -> usize {
