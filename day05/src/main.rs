@@ -1,15 +1,31 @@
+const INPUT: &str = include_str!("../input.txt");
+
 fn main() {
-    part1()
+    part1();
+    part2();
 }
 
 fn part1() {
-    const INPUT: &str = include_str!("../input.txt");
-
     println!("*** PART 1 ***");
 
     let max_id = INPUT.lines().map(decode_boarding_pass).max().unwrap();
 
     println!("{}", max_id);
+}
+
+fn part2() {
+    // If every number within our 11-bit range is present, except for one, then
+    // bitwise XORing each id together will give us the missing number.
+    // This works because XORing tells us whether an even or odd number of bits are set over a given column.
+
+    println!("*** PART 2 ***");
+
+    let missing_pass = INPUT
+        .lines()
+        .map(decode_boarding_pass)
+        .fold(0, |acc, id| acc ^ id);
+
+    println!("{}", missing_pass);
 }
 
 fn decode_boarding_pass(pass: &str) -> u16 {
