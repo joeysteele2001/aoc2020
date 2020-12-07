@@ -10,7 +10,7 @@ fn part1() {
 
     let groups = INPUT.split("\n\n");
 
-    let sum: usize = groups.map(parse_group).map(count_set_bits).sum();
+    let sum: u32 = groups.map(parse_group).map(u32::count_ones).sum();
 
     println!("{}", sum);
 }
@@ -20,7 +20,7 @@ fn part2() {
 
     let groups = INPUT.split("\n\n");
 
-    let sum: usize = groups.map(parse_group_part2).map(count_set_bits).sum();
+    let sum: u32 = groups.map(parse_group_part2).map(u32::count_ones).sum();
 
     println!("{}", sum);
 }
@@ -45,16 +45,4 @@ fn parse_person(person: &str) -> u32 {
         let question_num = c - b'a';
         acc | (1 << question_num)
     })
-}
-
-fn count_set_bits(mut x: u32) -> usize {
-    // Use Brian Kernighan's algorithm
-    let mut count = 0;
-
-    while x > 0 {
-        x &= x - 1;
-        count += 1;
-    }
-
-    count
 }
