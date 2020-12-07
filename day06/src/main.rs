@@ -2,6 +2,7 @@ const INPUT: &str = include_str!("../input.txt");
 
 fn main() {
     part1();
+    part2();
 }
 
 fn part1() {
@@ -14,10 +15,26 @@ fn part1() {
     println!("{}", sum);
 }
 
+fn part2() {
+    println!("*** PART 2 ***");
+
+    let groups = INPUT.split("\n\n");
+
+    let sum: usize = groups.map(parse_group_part2).map(count_set_bits).sum();
+
+    println!("{}", sum);
+}
+
 fn parse_group(group: &str) -> u32 {
     group
         .lines()
         .fold(0, |acc, person| acc | parse_person(person))
+}
+
+fn parse_group_part2(group: &str) -> u32 {
+    group
+        .lines()
+        .fold(u32::MAX, |acc, person| acc & parse_person(person))
 }
 
 fn parse_person(person: &str) -> u32 {
