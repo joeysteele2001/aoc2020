@@ -15,6 +15,7 @@ pub enum Instruction {
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum StepError {
     InstructionAlreadyExecuted(usize),
+    LastInstructionExecuted,
 }
 
 #[derive(Clone, Debug)]
@@ -37,8 +38,21 @@ impl Vm {
         }
     }
 
-    fn fetch(&self) -> Instruction {
-        self.instructions[self.current_instruction]
+    fn fetch(&mut self) -> Result<Instruction, StepError> {
+        let ins_num = self.current_instruction;
+
+        // The number immediately following the last instruction is `self.instructions.len()`
+        if ins_num == self.instructions.len() {
+            return Err(StepError::LastInstructionExecuted);
+        }
+
+        // Try inserting instruction number
+        if !self.instructions_executed.insert(ins_num) {
+            // Instruction number was already present
+            return Err(StepError::InstructionAlreadyExecuted(ins_num));
+        }
+
+        Ok(self.instructions[self.current_instruction])
     }
 
     fn execute(&mut self, instruction: Instruction) {
@@ -67,17 +81,28 @@ impl Vm {
         }
     }
 
-    #[must_use]
     pub fn step(&mut self) -> Result<(), StepError> {
-        let ins_num = self.current_instruction;
-        if self.instructions_executed.contains(&ins_num) {
-            return Err(StepError::InstructionAlreadyExecuted(ins_num));
-        }
-
-        self.instructions_executed.insert(ins_num);
-        let next_instruction = self.fetch();
+        let next_instruction = self.fetch()?;
         self.execute(next_instruction);
         Ok(())
+    }
+
+    pub fn terminates(&mut self) -> bool {
+        use StepError::*;
+
+        loop {
+            if let Err(e) = self.step() {
+                match e {
+                    InstructionAlreadyExecuted(_) => {
+                        return false;
+                    }
+
+                    LastInstructionExecuted => {
+                        return true;
+                    }
+                }
+            }
+        }
     }
 
     pub fn step_until_loop(&mut self) {
@@ -117,7 +142,7 @@ pub fn parse_instructions(instructions: &str) -> Vec<Instruction> {
                 "nop" => {
                     let arg = arg.parse().unwrap();
                     Instruction::Nop(arg)
-                },
+                }
 
                 x => panic!("invalid opcode {}", x),
             }
@@ -200,5 +225,25 @@ mod tests {
         let mut vm = Vm::new(instructions);
         vm.step_until_loop();
         assert_eq!(vm.acc(), 5);
+    }
+
+    #[test]
+    fn test_vm_terminates() {
+        use Instruction::*;
+
+        let instructions = vec![
+            Nop(0),
+            Acc(1),
+            Jmp(4),
+            Acc(3),
+            Jmp(-3),
+            Acc(-99),
+            Acc(1),
+            Nop(-4),
+            Acc(6),
+        ];
+
+        let mut vm = Vm::new(instructions);
+        assert!(vm.terminates())
     }
 }
