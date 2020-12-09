@@ -9,7 +9,7 @@ pub enum Instruction {
     Jmp(isize),
 
     /// No-op
-    Nop,
+    Nop(isize),
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -60,7 +60,7 @@ impl Vm {
                 self.current_instruction = new_instruction as usize;
             }
 
-            Instruction::Nop => {
+            Instruction::Nop(_) => {
                 /* do nothing */
                 self.current_instruction += 1;
             }
@@ -114,7 +114,10 @@ pub fn parse_instructions(instructions: &str) -> Vec<Instruction> {
                     Instruction::Jmp(amt)
                 }
 
-                "nop" => Instruction::Nop,
+                "nop" => {
+                    let arg = arg.parse().unwrap();
+                    Instruction::Nop(arg)
+                },
 
                 x => panic!("invalid opcode {}", x),
             }
@@ -137,7 +140,7 @@ mod tests {
         assert_eq!(
             &parsed,
             &[
-                Nop,
+                Nop(0),
                 Acc(1),
                 Jmp(4),
                 Acc(3),
@@ -163,7 +166,7 @@ mod tests {
     fn test_run_jmp() {
         use Instruction::{Jmp, Nop};
 
-        let mut vm = Vm::new([Jmp(2), Nop, Nop]);
+        let mut vm = Vm::new([Jmp(2), Nop(0), Nop(0)]);
         assert!(vm.step().is_ok());
         assert_eq!(vm.current_instruction, 2);
     }
@@ -172,7 +175,7 @@ mod tests {
     fn test_run_nop() {
         use Instruction::Nop;
 
-        let mut vm = Vm::new([Nop, Nop]);
+        let mut vm = Vm::new([Nop(0), Nop(0)]);
         assert!(vm.step().is_ok());
         assert_eq!(vm.acc(), 0);
         assert_eq!(vm.current_instruction, 1);
@@ -183,7 +186,7 @@ mod tests {
         use Instruction::*;
 
         let instructions = vec![
-            Nop,
+            Nop(0),
             Acc(1),
             Jmp(4),
             Acc(3),
