@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-const INPUT: [u32; 7] = [0,12,6,13,20,1,17];
+const INPUT: [u32; 7] = [0, 12, 6, 13, 20, 1, 17];
 
 fn main() {
     part1();
@@ -17,13 +17,13 @@ fn part1() {
 fn run_elf_game(start: &[u32], end: usize) -> u32 {
     let mut list = HashMap::new();
 
-    for i in 0..start.len() - 1 {
-        list.insert(start[i], i);
+    for (i, &n) in start.iter().enumerate().take(start.len() - 1) {
+        list.insert(n, i);
     }
 
     let mut prev = start[start.len() - 1];
 
-    for i in start.len() .. end {
+    for i in start.len()..end {
         let new = match list.get(&prev) {
             Some(idx) => (i - 1 - idx) as u32,
             None => 0,
